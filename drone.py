@@ -153,7 +153,7 @@ def experiment(metric, from_goal):
     sim.stopSimulation()
 
     stitcher = cv2.Stitcher_create(cv2.Stitcher_SCANS)
-    status, result = stitcher.stitch([img for img in drone.images])
+    status, result = stitcher.stitch(drone.images)
     cv2.namedWindow("stitch", cv2.WINDOW_NORMAL)
     result = cv2.cvtColor(result, cv2.COLOR_BGR2RGB)
     result = cv2.flip(result, 0)
