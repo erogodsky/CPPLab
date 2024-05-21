@@ -22,7 +22,6 @@ class Drone:
         self.get_high(self.height)
 
         self.canvas = Canvas(poly, padding=0.3)
-        self.segm_canvas = Canvas(poly)
         self.images = []
 
     def get_field(self):
@@ -159,7 +158,6 @@ def experiment(metric, from_goal):
     result = cv2.cvtColor(result, cv2.COLOR_BGR2RGB)
     result = cv2.flip(result, 0)
     cv2.imshow('stitch', result)
-    drone.segm_canvas.show()
     cv2.waitKey(0)
 
     return v, saved

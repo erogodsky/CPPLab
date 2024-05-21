@@ -76,7 +76,6 @@ class Graph:
         return ind
 
     def get_visible_nodes(self, pts):
-        # pts = ngon.get_transformed_contour()
         return [n for n in self.nodes if cv2.pointPolygonTest(pts, n.get_pos(), False) > 0]
 
     def find_route_wavefront(self, pStart):

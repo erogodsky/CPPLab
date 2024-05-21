@@ -36,16 +36,9 @@ class Canvas:
             dtype=np.int32)
         return pts
 
-    def _image2natural_coords(self, pts):
-        pts = np.array(
-            [(pt - [self._padding, self._padding]) / self._resize_coef + [self.min_x, self.min_y] for pt in pts],
-            dtype=np.float32)
-        return pts.reshape(-1, 2)
-
     def get_image(self):
         self._draw_poly(self._poly)
         self._draw_traj()
-        # img = cv2.flip(self.canvas, 1)
         img = cv2.cvtColor(self.canvas, cv2.COLOR_BGR2RGB)
         return img
 
@@ -62,7 +55,7 @@ class Canvas:
             p1 = self.traj[i][0].get_pos()
             p2 = self.traj[i + 1][0].get_pos()
             p1, p2 = self._natural_coords2image(np.array([p1, p2]))
-            if self.traj[i][1] and self.traj[i+1][1]:
+            if self.traj[i][1] and self.traj[i + 1][1]:
                 self.canvas = cv2.line(self.canvas, p1, p2, (0, 255, 0), 2)
             else:
                 self.canvas = cv2.line(self.canvas, p1, p2, (0, 0, 255), 2)
@@ -110,6 +103,3 @@ class Canvas:
             coords = self._natural_coords2image(np.array([[n.x, n.y]])).flatten()
             self.canvas = cv2.circle(self.canvas, coords, r, color, -1)
         self.show()
-
-    def draw_text(self, text, coord):
-        self.canvas = cv2.putText(self.canvas, text, coord, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
