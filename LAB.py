@@ -4,13 +4,6 @@ from pathlib import Path
 from drone import experiment
 
 
-def chebyshev(p1, p2):
-    x1, y1 = p1
-    x2, y2 = p2
-    h = max(abs(x1 - x2), abs(y1 - y2))
-    return h
-
-
 def manhatten(p1, p2):
     x1, y1 = p1
     x2, y2 = p2
@@ -18,21 +11,9 @@ def manhatten(p1, p2):
     return h
 
 
-def vertical(p1, p2):
-    x1, y1 = p1
-    x2, y2 = p2
-    h = abs(y1 - y2)
-    return h
-
-
-def horizontal(p1, p2):
-    x1, y1 = p1
-    x2, y2 = p2
-    h = abs(x1 - x2)
-    return h
-
-
-metrics = {'chebyshev': chebyshev, 'manhatten': manhatten, 'vertical': vertical, 'horizontal': horizontal}
+metrics = {
+    'manhatten': manhatten,
+}
 
 path = Path("exp10")
 path.mkdir(exist_ok=True)
