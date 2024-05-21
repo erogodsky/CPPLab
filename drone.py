@@ -100,7 +100,7 @@ def experiment(metric, from_goal):
     drone.canvas.draw_grid(graph)
 
     s = time.time()
-    route = graph.find_route_wavefront_classic(drone.get_position()[:2])
+    route = graph.find_route_wavefront(drone.get_position()[:2])
     print(time.time() - s)
     traj = [n.get_pos() for n in route]
 

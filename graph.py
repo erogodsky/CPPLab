@@ -33,10 +33,8 @@ class Graph:
                 tr = [jx + step / 2, iy + step / 2]
                 bl = [jx - step / 2, iy - step / 2]
                 br = [jx + step / 2, iy - step / 2]
-                # if (any([cv2.pointPolygonTest(pts, corner, False) > 0 for corner in (tl, tr, bl, br)]) or
-                #         any([cv2.pointPolygonTest(np.array([tl, tr, bl, br], dtype=np.float32), point, False) > 0
-                #              for point in pts])):
-                if do_contours_intersect([tl, tr, bl, br], pts) or cv2.pointPolygonTest(pts, np.array([jx, iy]), False) > 0:
+                if do_contours_intersect([tl, tr, bl, br], pts) or cv2.pointPolygonTest(pts, np.array([jx, iy]),
+                                                                                        False) > 0:
                     n = Node(jx, iy)
                     map_row.append(0)
                     node_map_row.append(n)
@@ -56,12 +54,6 @@ class Graph:
         self.metric = metric
         self.from_goal = from_goal
         self.max_dist = 0
-
-    def draw(self, screen):
-        for n in self.nodes:
-            color = (200, 100, 50) if n.observed else (0, 0, 0)
-            r = 8 if n.visited else 5
-            pygame.draw.circle(screen, color, (n.x, n.y), r)
 
     def find_nearest_node(self, p):
         def p_dist(n):
@@ -87,29 +79,7 @@ class Graph:
         # pts = ngon.get_transformed_contour()
         return [n for n in self.nodes if cv2.pointPolygonTest(pts, n.get_pos(), False) > 0]
 
-    def get_observed_nodes(self):
-        return [n for n in self.nodes if n.observed]
-
-    # базовая ф-ция поиска маршрута
-    def find_route1(self, pStart):
-        for n in self.nodes:
-            n.checked = False
-
-        n = self.find_nearest_node(pStart)
-        n.checked = True
-        res = [n]
-
-        while True:
-            nodes_ = [m for m in self.nodes if not m.checked]
-            if len(nodes_) == 0:
-                break
-            dd = [dist(res[-1].get_pos(), m.get_pos()) for m in nodes_]
-            ind = np.argmin(dd)
-            res.append(nodes_[ind])
-            nodes_[ind].checked = True
-        return res
-
-    def find_route_wavefront_classic(self, pStart):
+    def find_route_wavefront(self, pStart):
         for n in self.nodes:
             n.checked = False
 
@@ -124,15 +94,10 @@ class Graph:
             for i in range(self.heuristic.shape[0]):
                 for j in range(self.heuristic.shape[1]):
                     if self.node_map[i, j] is not None:
-                        h = self.metric()[0]((i, j), n)
+                        h = self.metric((i, j), n)
                         self.heuristic[i, j] = h
                         self.visited[i, j] = 0
                         self.max_dist = max(h, self.max_dist)
-
-        # if self.from_goal:
-        #     distances = list(range(self.max_dist, -1, -1))
-        # else:
-        #     distances = list(range(0, self.max_dist + 1))
 
         traj = []
         while True:
@@ -140,39 +105,22 @@ class Graph:
             if unvisited.size == 0:
                 break
 
-            curr_dist = np.max(unvisited)
+            curr_dist = np.max(unvisited) if self.from_goal else np.min(unvisited)
             curr_dist_cells = np.argwhere(np.logical_and(self.heuristic == curr_dist, self.visited == 0))
-
-            edges = []
-            for j in range(len(curr_dist_cells)):
-                p = curr_dist_cells[j]
-                c = 0
-                for neigh in self.metric()[1](p):
-                    if ((np.array(neigh) >= [0,0]).all() and
-                            (np.array(neigh) < self.heuristic.shape).all() and
-                            self.heuristic[neigh] == curr_dist):
-                        c += 1
-                if c <= 1:
-                    edges.append(p)
-                    # if len(edges) == 2:
-                    #     break
-
-            if not edges:
-                edges = curr_dist_cells
 
             if traj:
                 target = traj[-1]
             else:
                 target = pStart
-            dd = [dist(target, self.node_map[tuple(e)].get_pos()) for e in edges]
+            dd = [dist(target, self.node_map[tuple(c)].get_pos()) for c in curr_dist_cells]
             ind = np.argmin(dd)
-            p = edges[ind]
+            p = curr_dist_cells[ind]
             traj.append(p)
             self.visited[tuple(p)] = 1
 
             while True:
                 neighbours = moore_neighbourhood(traj[-1])
-                neighbours = [neigh for neigh in neighbours if (neigh >= [0,0]).all and
+                neighbours = [neigh for neigh in neighbours if (neigh >= [0, 0]).all and
                               (neigh < self.heuristic.shape).all() and
                               self.visited[tuple(neigh)] == 0]
                 if not neighbours:
@@ -187,7 +135,8 @@ class Graph:
                         elif self.heuristic[tuple(neigh)] > max_neigh_val:
                             max_neighs = [neigh]
                             max_neigh_val = self.heuristic[tuple(neigh)]
-                    dd = [dist(self.node_map[tuple(traj[-1])].get_pos(), self.node_map[tuple(n)].get_pos()) for n in max_neighs]
+                    dd = [dist(self.node_map[tuple(traj[-1])].get_pos(), self.node_map[tuple(n)].get_pos()) for n in
+                          max_neighs]
                     ind = np.argmin(dd)
                     neigh_to_append = max_neighs[ind]
                 else:
@@ -199,11 +148,11 @@ class Graph:
                         elif self.heuristic[tuple(neigh)] < min_neigh_val:
                             min_neighs = [neigh]
                             min_neigh_val = self.heuristic[tuple(neigh)]
-                    dd = [dist(self.node_map[tuple(traj[-1])].get_pos(), self.node_map[tuple(n)].get_pos()) for n in min_neighs]
+                    dd = [dist(self.node_map[tuple(traj[-1])].get_pos(), self.node_map[tuple(n)].get_pos()) for n in
+                          min_neighs]
                     ind = np.argmin(dd)
                     neigh_to_append = min_neighs[ind]
                 traj.append(neigh_to_append)
                 self.visited[tuple(neigh_to_append)] = 1
 
         return [self.node_map[tuple(p)] for p in traj]
-
