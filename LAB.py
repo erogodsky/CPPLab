@@ -4,15 +4,15 @@ from pathlib import Path
 from drone import experiment
 
 
-def manhatten(p1, p2):
+def chebyshev(p1, p2):
     x1, y1 = p1
     x2, y2 = p2
-    h = abs(x1 - x2) + abs(y1 - y2)
+    h = max(abs(x1 - x2), abs(y1 - y2))
     return h
 
 
 metrics = {
-    'manhatten': manhatten,
+    'chebyshev': chebyshev,
 }
 
 path = Path("exp10")
